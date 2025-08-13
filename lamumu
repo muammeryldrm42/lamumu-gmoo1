@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lamumu: Farm Chronicles</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    canvas { background: url('https://i.imgur.com/8QfZQzF.png'); display: block; }
+    #dialogue, #score, #task {
+      position: absolute;
+      background: rgba(255,255,255,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #dialogue { bottom: 20px; left: 20px; }
+    #score { top: 10px; left: 10px; }
+    #task { top: 10px; right: 10px; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="dialogue">"Welcome to the farm!"</div>
+  <div id="score">Score: 0</div>
+  <div id="task">Task: Eat 3 grass</div>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_7c3b2b3b3b.mp3?filename=farm-music-123.mp3" loop autoplay></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const dialogue = document.getElementById('dialogue');
+    const scoreDisplay = document.getElementById('score');
+    const taskDisplay = document.getElementById('task');
+
+    const cowSprite = new Image();
+    cowSprite.src = 'https://i.imgur.com/1XKzF1F.png';
+
+    const cows = [
+      { x: 400, y: 300 },
+      { x: 500, y: 350 },
+      { x: 300, y: 250 }
+    ];
+    const player = cows[0];
+    player.speed = 5;
+
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    const grass = Array.from({ length: 5 }, () => ({
+      x: Math.random() * 750,
+      y: Math.random() * 550,
+      type: 'grass'
+    }));
+
+    const hay = Array.from({ length: 3 }, () => ({
+      x: Math.random() * 750,
+      y: Math.random() * 550,
+      type: 'hay'
+    }));
+
+    const water = { x: 600, y: 100, width: 80, height: 60 };
+    let score = 0;
+    let taskDone = false;
+
+    function update() {
+      if (keys['ArrowUp']) player.y -= player.speed;
+      if (keys['ArrowDown']) player.y += player.speed;
+      if (keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['ArrowRight']) player.x += player.speed;
+
+      // Ot yeme
+      grass.forEach((g, i) => {
+        const dx = player.x - g.x;
+        const dy = player.y - g.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 40) {
+          grass.splice(i, 1);
+          score += 1;
+          scoreDisplay.textContent = `Score: ${score}`;
+          dialogue.textContent = `"Mmm... Fresh grass!"`;
+          if (score >= 3 && !taskDone) {
+            taskDisplay.textContent = "Task: Completed!";
+            dialogue.textContent = `"You finished your task!"`;
+            taskDone = true;
+          }
+        }
+      });
+
+      // Saman yeme
+      hay.forEach((h, i) => {
+        const dx = player.x - h.x;
+        const dy = player.y - h.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 40) {
+          hay.splice(i, 1);
+          dialogue.textContent = `"Crunchy hay! I love it!"`;
+        }
+      });
+
+      // Su içme
+      if (
+        player.x > water.x - 20 &&
+        player.x < water.x + water.width &&
+        player.y > water.y - 20 &&
+        player.y < water.y + water.height
+      ) {
+        dialogue.textContent = `"Slurp... That’s refreshing!"`;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cows.forEach(c => {
+        ctx.drawImage(cowSprite, c.x, c.y, 50, 50);
+      });
+
+      ctx.fillStyle = 'green';
+      grass.forEach(g => {
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, 15, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = 'orange';
+      hay.forEach(h => {
+        ctx.beginPath();
+        ctx.arc(h.x, h.y, 15, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(water.x, water.y, water.width, water.height);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    cowSprite.onload = gameLoop;
+  </script>
+</body>
+</html>
