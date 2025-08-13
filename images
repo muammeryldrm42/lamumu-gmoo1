@@ -1,0 +1,4 @@
+cow.sprite.src = 'images/cow.png';
+grass.sprite.src = 'images/grass.png';
+hay.sprite.src = 'images/hay.png';
+water.sprite.src = 'images/water.png';
